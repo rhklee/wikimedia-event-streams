@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wikimedia Event Stream</title>
+</head>
+
+<body>
+  <!-- Wikimedia Event Streams: https://stream.wikimedia.org/?doc -->
+  <div id="container">
+    <h3>Wikimedia Event Stream</h3>
+    <div>
+      Stream type:
+      <span id="stream-type"></span>
+    </div>
+    <ul id="event-list">
+    </ul>
+  </div>
+
+<script>
+  function createAttrNode(attrName, attrValue) {
+    const attr = document.createAttribute(attrName);
+    attr.value = attrValue;
+    return attr
+  }
+
+  function insertText(id, content) {
+    document.getElementById(id).appendChild(document.createTextNode(content));
+  }
+
+  (function() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/EventSource
+    const wikimediaStream = 'page-create';
+    const wikimediaEventStream = 'https://stream.wikimedia.org/v2/stream'
+    const eventSourceResource = `${wikimediaEventStream}/${wikimediaStream}`
+    const eventSource = new EventSource(eventSourceResource);
+
+    insertText('stream-type', wikimediaStream);
+
+    eventSource.onopen = function() {
+      console.log(`Event stream opened: ${eventSourceResource}`);
+    };
+
+    eventSource.onerror = function(msg) {
+      console.error(`The event stream ${eventSourceResource} errored with message: ${msg}`);
+    };
+
+    eventSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+
+      console.log(data);
+
+      const uri = data.meta.uri || '';
+      const pageTitle = data.page_title || '[NO PAGE TITLE]';
+
+      const aEl = document.createElement('a');
+      aEl.appendChild(document.createTextNode(pageTitle));
+      // a tag attrs
+      aEl.setAttributeNode(createAttrNode('href', uri));
+      aEl.setAttributeNode(createAttrNode('target', '_blank'));
+
+      const liEl = document.createElement('li');
+      liEl.appendChild(aEl);
+      document.getElementById('event-list').appendChild(liEl);
+    };
+  }());
+</script>
+</body>
+</html>
